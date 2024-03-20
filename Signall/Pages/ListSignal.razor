@@ -1,0 +1,102 @@
+﻿@page "/listsh"
+@using Data
+@using Services
+@inject ISignalService SignalService
+
+
+<h3>Danh sách của tất cả sinh hiệu</h3>
+
+
+<RadzenDataGrid Data="@listsignal" TItem="AllorListSignal" PageSize="2" AllowFiltering=true AllowColumnPicking="true">
+    <Columns>
+        
+   
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="disphay" Title="Tên">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.display</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="value_string" Title="Giá trị">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.value_string</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="status" Title="TT">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.status</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="location" Title="Phòng">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.location</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="requester" Title="Người yêu cầu">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.requester</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="performer" Title="Người thực hiện">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.performer</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="authored" Title="Ngày nhập">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.authored</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="note" Title="Ghi chú">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }   
+                <span style="@lineThroughStyle">@data.note</span>
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+
+@code {
+
+    // private List<AllorListSignal> allsignal;
+    private ApiResult<AllorListSignal> apiresult;
+    private List<AllorListSignal> listsignal;
+    private Response res;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        apiresult = await SignalService.GetListSignal();
+        listsignal = apiresult.value;
+    }
+
+
+}

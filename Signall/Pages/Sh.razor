@@ -1,0 +1,272 @@
+﻿@page "/sh"
+@using Data
+@using Services
+@inject NavigationManager NavigationManager
+@inject NotificationService NotificationService
+@inject ISignalService SignalService
+
+@using Microsoft.JSInterop
+@inject IJSRuntime JSRuntime
+
+@using System.Text.RegularExpressions
+
+<h1>Sinh Hiệu </h1>
+
+@if (signals != null)
+{
+
+    <div class="row">
+        <div class="col-md-3 col-12">
+
+        </div>
+        <div class=" col-md-6 col-12">
+            
+            @foreach (var signal in signals.value)
+            {
+                var signalInfo = GetSignalInfo(signal.code);
+
+                <div class="container mt-3 " style=" border:outset;width:260px">
+                    <div class="row">
+                        <div class="col-md-3 col-3">
+                            <div class="image p-1">
+                                <img src="@signalInfo.image" alt="Signal Image" width="50" height="50">
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-6">
+                            <div class="text-above">@signalInfo.name</div>
+                            <div class="text-below">@signal.display</div>
+                        </div>
+                        <div class="col-md-3 col-3 mt-2">
+
+                          @*   <button class="btn btn-primary btn-sm" @onclick="OpenModal">
+                                Sửa
+                             </button> *@
+                            <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="(()=>OpenModal(signal.code,  signal.display ))" />
+
+                        </div>
+                    </div>
+                </div>
+
+                @if (signal.code == "SIG_06")
+                {
+                    float.TryParse(signal.display.Split()[0], out weight);
+                }
+                @if(signal.code == "SIG_08")
+                {
+                    float.TryParse(signal.display.Split()[0], out heigt);
+
+
+                }
+
+                //Modal
+                <div class="modal" tabindex="-1" role="dialog" style="display:@(ModalStyle ? "block" : "none")">
+                    <div class="modal-dialog" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title">Nhập sinh hiệu</h5>
+                                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="CloseModal">
+                                    <span aria-hidden="true">&times;</span>
+                                </button>
+                            </div>
+                            <div class="modal-body">
+                                <label for="newValue">Giá trị mới:</label>
+                                <input type="text" id="Value" @bind="Value" />
+
+                            </div>
+                            <div class="modal-footer">
+@*                              <button type="button" class="btn btn-warning btn-sm" data-dismiss="modal" @onclick="ListSign">Ds tất cả sinh hiệu</button>
+                                <button type="button" class="btn btn-success btn-sm" data-dismiss="modal" @onclick="AllSign" >Ds Sinh Hiệu</button> *@
+                                <RadzenButton Icon="list" Size="ButtonSize.Small" Text="A-Z" Click="ListSign" />
+                                <RadzenButton Icon="list" Size="ButtonSize.Small" Click="AllSign" />
+
+                                <button type="button" class="btn btn-primary btn-sm" data-dismiss="modal" @onclick="NewSignal">Lưu</button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+    
+            }
+
+            <div class="container mt-3 " style=" border:outset;width:260px">
+                <div class="row">
+                    <div class="col-md-3 col-3">
+                        <div class="image p-1">
+                            <img src="image/bmi.png" alt="Signal Image" width="50" height="50">
+                        </div>
+                    </div>
+                    <div class="col-md-8 col-6">
+                        <div class="text-above">BMI</div>
+                        <div class="text-below">
+                            @{
+                                float bmi = weight / ((heigt/100) * (heigt/100));
+                            } @Math.Round(bmi, 2) kg/m2
+                        </div>
+                    </div>
+                    <div class="col-md-1 col-3 mt-2">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-12">
+        
+        
+        
+        </div>
+    </div>
+   
+   
+}
+else
+{
+    <p>Loading...</p>
+}
+
+
+
+
+@code {
+
+
+
+    private ApiResult<Signal> signals;
+    private HttpClient httpClient = new HttpClient();
+    private Response res;
+
+    private float heigt ;
+    private float weight ;
+    private string test1, test2;
+    protected override async Task OnInitializedAsync()
+    {
+        await FetchData();
+
+    }
+
+    private async Task FetchData()
+    {
+        signals = await SignalService.GetSignal();
+
+    }
+
+    //Validate nhóm máu
+    string[] validBloodGroups = { "A/Rh+", "A/Rh-", "B/Rh+", "B/Rh-", "O/Rh+", "O/Rh-", "AB/Rh+", "AB/Rh-" };
+    bool CheckBloodGroup() 
+    {
+        return validBloodGroups.Contains(Value);
+    }
+
+
+
+    public (string name, string image) GetSignalInfo(string code)
+    {
+        switch (code)
+        {
+            case "SIG_01":
+                return ("Huyết áp", "image/huyet-ap.jpg");
+            case "SIG_02":
+                return ("Mạch", "image/mach.png");
+            case "SIG_03":
+                return ("Nhiệt độ", "image/nhiet-do.png");
+            case "SIG_04":
+                return ("Spo2", "image/spo2.png");
+            case "SIG_05":
+                return ("Nhịp thở", "image/nhip-tho.png");
+            case "SIG_06":
+                return ("Cân nặng", "image/can-nang.png");
+            case "SIG_08":
+                return ("Chiều cao", "image/chieu-cao.png");
+            case "SIG_10":
+                return ("Nhóm máu", "image/nhom-mau.png");
+            default:
+                return ("Còn lại", ""); 
+        }
+    }
+
+
+
+
+
+    //Modal
+    private bool ModalStyle = false;
+    private string Value;
+
+    private void OpenModal(string codesignal, string? display )
+    {
+        test1 = codesignal;
+
+
+
+        int spaceIndex = display.IndexOf(" ");
+        if(display != null)
+        {
+            test2 = display.Substring(spaceIndex + 1);
+        }
+        else
+        {
+            test2 = null;
+        }
+
+        ModalStyle = true;
+    }
+    private void CloseModal()
+    {
+
+        ModalStyle = false;
+    }
+    //New Sign
+    private async Task NewSignal()
+    {
+        if (test1 == "SIG_10")
+        {
+            if (CheckBloodGroup())
+            {
+                res = await SignalService.CreateSignal(test1,test2, Value);
+                if(res.code == "200")
+                {
+                    NotificationService.Notify(NotificationSeverity.Success, res.message);
+                }else
+                {
+                    NotificationService.Notify(NotificationSeverity.Error, res.message);
+                }
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, "Sai rồi");
+
+            }
+        }
+        else
+        {
+            res = await SignalService.CreateSignal(test1, test2, Value);
+            if (res.code == "200")
+            {
+                NotificationService.Notify(NotificationSeverity.Success, res.message);
+            }
+            else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, res.message);
+            }
+        }
+
+
+        test1 = "";
+        test2 = "";
+        Value = "";
+        CloseModal();
+        await FetchData();
+    }
+    //AllSign
+    private void AllSign()
+    {
+        NavigationManager.NavigateTo($"/allsh/{test1}");
+    }
+    private void ListSign()
+    {
+        NavigationManager.NavigateTo("/listsh");
+    }
+
+
+
+}

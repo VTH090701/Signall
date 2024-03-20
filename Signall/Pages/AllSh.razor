@@ -1,0 +1,212 @@
+﻿@page "/allsh/{id}"
+
+@using System.Collections.Generic
+@using Newtonsoft.Json
+@using Data
+@using Services
+@inject ISignalService SignalService
+@inject IJSRuntime JSRuntime
+@inject NotificationService NotificationService
+
+
+
+
+<h3>Tất cả sinh hiệu</h3>
+<RadzenDataGrid Data="@allsignal" TItem="AllorListSignal" PageSize="2" AllowFiltering=true AllowColumnPicking="true">
+    <Columns>
+
+       
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="disphay" Title="Tên">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.display</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="value_string" Title="Giá trị">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.value_string</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="status" Title="TT">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.status</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="location" Title="Phòng">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.location</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="requester" Title="Người yêu cầu">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.requester</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="performer" Title="Người thực hiện">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.performer</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="authored" Title="Ngày nhập">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.authored</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Property="note" Title="Ghi chú">
+            <Template Context="data">
+                @{
+                    var lineThroughStyle = data.status == "cancel" ? "text-decoration: line-through;" : "";
+                }
+                <span style="@lineThroughStyle">@data.note</span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="AllorListSignal" Title="">
+            <Template Context="data">
+               
+                @if (data.status == "cancel")
+                {
+                }
+                else
+                {
+                    <RadzenButton Icon="edit" Size="ButtonSize.Small" Click="(()=>OpenModal(data.id,data.seq,data.unit))" />
+
+                    <RadzenButton Icon="delete" Size="ButtonSize.Small" class="rz-background-color-danger" Click="(()=>DeleteSignal(data.id,data.seq))" />
+                }
+           
+            </Template>
+        </RadzenDataGridColumn>
+    </Columns>
+</RadzenDataGrid>
+
+
+<div class="modal" tabindex="-1" role="dialog" style="display:@(ModalStyle ? "block" : "none")">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nhập sinh hiệu</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" @onclick="CloseModal">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <label for="newValue">Giá trị mới:</label>
+                <input type="text" id="Value" @bind="Value" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-dismiss="modal" @onclick="UpdateSignal">Lưu</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public string Id { get; set; }
+        
+    // private List<AllorListSignal> allsignal ;
+    private ApiResult<AllorListSignal> apiresult;
+    private List<AllorListSignal> allsignal;
+    private Response res;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        await FetchData();
+    }
+
+    private async Task FetchData()
+    {
+        apiresult = await SignalService.GetAllSignal(Id);
+        allsignal = apiresult.value;
+
+    }
+
+    //Modal
+    private bool ModalStyle = false;
+    private string Value;
+    private string test1, test2, test3 ;
+
+    private void OpenModal( string codeupdate,string sequpdate, string unitupdate)
+    {
+        test1 = codeupdate;
+        test2 = sequpdate;
+        test3 = unitupdate;
+
+
+        ModalStyle = true;
+    }
+    private void CloseModal()
+    {
+        test1 = "";
+        test2 = "";
+        test3 = "";
+        Value = "";
+
+        ModalStyle = false;
+    }
+
+    private async Task DeleteSignal(string code, string seq)
+    {
+        if (await JSRuntime.InvokeAsync<bool>("confirm", new object[] { $"Bạn có chắc chắn muốn xóa mục này không?" }))
+        {
+            res = await SignalService.DeleteSignal(code,seq);
+            if(res.code == "200")
+            {
+                NotificationService.Notify(NotificationSeverity.Success, res.message);
+            }else
+            {
+                NotificationService.Notify(NotificationSeverity.Error, res.message);
+
+            }
+            await FetchData();
+        }
+
+
+    }   
+    private async Task UpdateSignal()
+    {
+        res = await SignalService.UpdateSignal(test1, test2, test3, Value);
+        if(res.code == "200")
+        {
+            NotificationService.Notify(NotificationSeverity.Success, res.message);
+        }else
+        {
+            NotificationService.Notify(NotificationSeverity.Error, res.message);
+
+        }
+        
+        CloseModal();
+        await FetchData();
+
+    }
+
+
+
+
+
+}
